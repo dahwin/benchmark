@@ -18,9 +18,9 @@ PROMPT = "Describe this image in complete detail within 500 words. Include every
 MAX_TOKENS = 700
 TEMPERATURE = 0.0
 
-MAX_REQUESTS_PER_MINUTE = 1000
-CONCURRENT_LIMIT = 50
-MAX_WORKERS = 200
+MAX_REQUESTS_PER_MINUTE = 1200
+CONCURRENT_LIMIT = 450
+MAX_WORKERS = 800
 
 # ═══════════════════════════════════════════════════════════════
 # RATE LIMITER
