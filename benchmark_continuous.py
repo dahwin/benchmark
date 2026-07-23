@@ -12,7 +12,7 @@ from pathlib import Path
 # CONFIG
 # ═══════════════════════════════════════════════════════════════
 MODEL_URL = "http://127.0.0.1:30000/v1"
-MODEL_NAME = "google/gemma-4-31B-it"
+MODEL_NAME = "google/gemma-4-26B-A4B-it"
 IMG_FOLDER = "1000x"
 PROMPT = "Describe this image in complete detail within 500 words. Include every visible element, text, color, layout, and context."
 MAX_TOKENS = 700
