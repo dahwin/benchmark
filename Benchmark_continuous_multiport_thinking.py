@@ -5,24 +5,15 @@ import asyncio
 import concurrent.futures
 import collections
 import threading
-import itertools
 from openai import OpenAI
 from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════
 # CONFIG
 # ═══════════════════════════════════════════════════════════════
-# One URL per server. Requests are spread round-robin across all of them.
-# Single server: keep just one entry.
-MODEL_URLS = [
-    "http://127.0.0.1:30000/v1",
-    "http://127.0.0.1:30001/v1",
-]
+MODEL_URL = "http://127.0.0.1:8000/v1"
 MODEL_NAME = "Qwen/Qwen3.8-Flash-Next-FP8"
-
-# True / False. Sent as BOTH "thinking" and "enable_thinking" in
-# chat_template_kwargs; whichever one the model's template ignores is harmless.
-THINKING = False
+THINKING = False   # True / False -> sent as BOTH "thinking" and "enable_thinking"
 IMG_FOLDER = "1000x"
 #IMG_FOLDER = "50x"
 
@@ -61,31 +52,7 @@ rate_limiter = RateLimiter(MAX_REQUESTS_PER_MINUTE)
 # ═══════════════════════════════════════════════════════════════
 # SETUP
 # ═══════════════════════════════════════════════════════════════
-class _RRCompletions:
-    """Same .create(...) as the OpenAI SDK, but each call goes to the next server."""
-    def __init__(self, clients):
-        self._cycle = itertools.cycle(clients)
-        self._lock = threading.Lock()
-
-    def create(self, *args, **kwargs):
-        with self._lock:
-            c = next(self._cycle)
-        flag = bool(THINKING)
-        extra = dict(kwargs.get("extra_body") or {})
-        extra["chat_template_kwargs"] = {"thinking": flag, "enable_thinking": flag}
-        kwargs["extra_body"] = extra
-        return c.chat.completions.create(*args, **kwargs)
-
-class _RRChat:
-    def __init__(self, completions):
-        self.completions = completions
-
-class RoundRobinClient:
-    def __init__(self, urls):
-        clients = [OpenAI(api_key="not-needed", base_url=u) for u in urls]
-        self.chat = _RRChat(_RRCompletions(clients))
-
-client = RoundRobinClient(MODEL_URLS)
+client = OpenAI(api_key="not-needed", base_url=MODEL_URL)
 
 def get_images(folder):
     exts = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
@@ -114,6 +81,7 @@ def process_one_image(image_path):
             }],
             max_tokens=MAX_TOKENS,
             temperature=TEMPERATURE,
+            extra_body={"chat_template_kwargs": {"thinking": bool(THINKING), "enable_thinking": bool(THINKING)}},
         )
 
         usage = response.usage
